@@ -43,8 +43,7 @@ Listando as análises feitas pra cada série temporal, na ordem que foram feitas
 - Faz os espaços EPSB-K-means e EDF-K-means .
 
 ## Arquivos
-- Ainda a terminar.
-
+- A fazer, o exercício propõe que façamos um clustering via k-means para todos os dados gerados a partir dos sinais anteriores (GRNG, Colored Noise, pmodel e Chaos Noise) e com eles tentar classificar em quais desses tipos de ruídos os sinais vindo de arquivo devem se encaixar melhor, fazendo uma identificação por cores em cada um deles.
 # ex63.py
 
 Resolução dos exercícios 6.3 e 10.2 da lista, utiliza os módulos statsfuncs.py e mfdfa.py, e como input um arquivo completo do https://ourworldindata.org/coronavirus de "Daily confirmed cases", executa uma análise de SOC e de K-Means, tem um arquivo de exemplo no repositório de "daily-cases-covid-19.csv", obtido no dia 18/05/2020.
@@ -55,11 +54,11 @@ Resolução do exercício 9 da lista.
 
 # mfdfa.py e statsfuncs.py
 
-Arquivo de funções usado em outros arquivos
+Arquivo de funções usado em outros arquivos.
 
 # sol3ghz.dat, surftemp504.txt e covidbrasil.dat
 
-Arquivos de dados utilizados no exercício 6.2
+Arquivos de dados utilizados no exercício 6.2.
 
 
 # daily-cases-covid-19.csv
