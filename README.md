@@ -54,7 +54,7 @@ Resolução do exercício 9 da lista.
 
 # mfdfa.py e statsfuncs.py
 
-Arquivo de funções usado em outros arquivos.
+Arquivo de módulo com funções usado em outros programas.
 
 # sol3ghz.dat, surftemp504.txt e covidbrasil.dat
 
