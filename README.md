@@ -46,13 +46,13 @@ Listando as análises feitas pra cada série temporal, na ordem que foram feitas
 - A fazer, o exercício propõe que façamos um clustering via k-means para todos os dados gerados a partir dos sinais anteriores (GRNG, Colored Noise, pmodel e Chaos Noise) e com eles tentar classificar em quais desses tipos de ruídos os sinais vindo de arquivo devem se encaixar melhor, fazendo uma identificação por cores em cada um deles.
 # ex63.py
 
-Resolução dos exercícios 6.3 e 10.2 da lista, utiliza os módulos statsfuncs.py e mfdfa.py, e como input um arquivo completo do https://ourworldindata.org/coronavirus de "Daily confirmed cases", executa uma análise de SOC e de K-Means, tem um arquivo de exemplo no repositório de "daily-cases-covid-19.csv", obtido no dia 18/05/2020.
+Resolução dos exercícios 6.3 e 10.2 da lista, utiliza os módulos statsfuncs.py, mfdfa.py e waipy.py, e como input um arquivo completo do https://ourworldindata.org/coronavirus de "Daily confirmed cases", executa uma análise de SOC e de K-Means, tem um arquivo de exemplo no repositório de "daily-cases-covid-19.csv", obtido no dia 18/05/2020.
 
 # ex9.py
 
-Resolução do exercício 9 da lista.
+Resolução do exercício 9 da lista, utiliza o arquivo waipy.py.
 
-# mfdfa.py e statsfuncs.py
+# mfdfa.py, statsfuncs.py e waipy.py
 
 Arquivo de módulo com funções usado em outros programas.
 
