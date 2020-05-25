@@ -27,17 +27,7 @@ from yellowbrick.cluster import KElbowVisualizer
 import mfdfa
 import statsfuncs
 
-'''
-Função que serviu para teste do mapa de cullen frey, gera números aleatórios
-numa certa distribuição e o mapa posiciona naquela distribuição de acordo
-com os momentos estatísticos de Kurtosis e Skewness²
-def teste(N):
-    x=range(N)
-    y=[]
-    for i in x:
-        y.append(rnd.lognormal())
-    return x,y
-'''
+
 '''
 ###############################################################################
 
@@ -330,7 +320,7 @@ def cullenfrey(xd,yd,legend, title):
     plt.ylabel("Kurtosis")
     plt.savefig(title+legend+"cullenfrey.png")
     plt.show()
-
+    
 def makespaces(s2, k, alpha, beta, legend, title):
     kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta})
     K=8
@@ -373,7 +363,57 @@ def makespaces(s2, k, alpha, beta, legend, title):
     plt.title(title+": EPSB-K-means")
     plt.show()
 
-
+def makespaces62(s2, k, alpha, beta, legend, title, ilist):
+    kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta, "Entity": ilist})
+    K=8
+    model=KMeans()
+    visualizer = KElbowVisualizer(model, k=(1,K))
+    kIdx=visualizer.fit(kk.drop(columns=["Beta", "Entity"]))        # Fit the data to the visualizer
+    visualizer.show()        # Finalize and render the figure
+    kIdx=kIdx.elbow_value_
+    model=KMeans(n_clusters=kIdx).fit(kk.drop(columns=["Beta", "Entity"]))
+    print(len(model.labels_))
+    fig = plt.figure(figsize=(20,15))
+    ax = Axes3D(fig)
+    cmap = plt.get_cmap('gnuplot')
+    ilist2=list(set(ilist))
+    clr = [cmap(i) for i in np.linspace(0, 1, len(ilist2))]
+    for i in range(0,len(ilist2)):
+        ind = (kk["Entity"]==ilist2[i])
+        ax.scatter(kk["Skew²"][ind],kk["Kurtosis"][ind], kk["Alpha"][ind], s=30, c=clr[i], label=ilist2[i])
+    ax.set_xlabel("Skew²")
+    ax.set_ylabel("Kurtosis")
+    ax.set_zlabel(r"$\alpha$")
+    ax.legend()
+    plt.title(title+": EDF-K-means")
+    plt.savefig("masoq.png")
+    plt.show()
+    kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta, "Entity": ilist}, index=model.labels_)
+    kk.sort_index(inplace=True)
+    kk.to_csv("clusteringalpha.csv")
+    model=KMeans()
+    visualizer = KElbowVisualizer(model, k=(1,K))
+    kIdx=visualizer.fit(kk.drop(columns=["Alpha", "Entity"]))        # Fit the data to the visualizer
+    visualizer.show()        # Finalize and render the figure
+    kIdx=kIdx.elbow_value_
+    model=KMeans(n_clusters=kIdx).fit(kk.drop(columns=["Alpha", "Entity"]))
+    fig = plt.figure(figsize=(20,15))
+    ax = Axes3D(fig)
+    cmap = plt.get_cmap('gnuplot')
+    clr = [cmap(i) for i in np.linspace(0, 1, len(ilist2))]
+    for i in range(0,len(ilist2)):
+        ind = (kk["Entity"]==ilist2[i])
+        ax.scatter(kk["Skew²"][ind],kk["Kurtosis"][ind], kk["Beta"][ind], s=30, c=clr[i], label=ilist[i])
+    ax.set_xlabel("Skew²")
+    ax.set_ylabel("Kurtosis")
+    ax.set_zlabel(r"$\beta$")
+    ax.legend()
+    plt.title(title+": EPSB-K-means")
+    plt.savefig("masoq2.png")
+    plt.show()
+    kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta, "Entity": ilist}, index=model.labels_)
+    kk.sort_index(inplace=True)
+    kk.to_csv("clusteringbeta.csv")
 
 '''
 ###############################################################################
@@ -586,26 +626,56 @@ def main():
         d=makeK(d,ilist, title)
     elif(choice=="5"):
         namefile=["sol3ghz.dat","surftemp504.txt", "covidbrasil.dat"]
-        ind=int(input("1 sol3ghz, 2 - surftemp504, 3 - COVID Brasil\n\n"))
-        title=namefile[ind-1]
-        ilist=[title]
-        fileread=open(namefile[ind-1])
-        y=[]
-        for line in fileread:
-            y.append(float(line))
-        alfa,xdfa,ydfa, reta = statsfuncs.dfa1d(y,1)
-        freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM = statsfuncs.psd(y)
-        psi=mfdfa.makemfdfa(y)
-        d=pd.DataFrame({'Variance': statsfuncs.variance(y), 'Skewness': statsfuncs.skewness(y), 'Kurtosis': statsfuncs.kurtosis(y)+3, 'Alpha': alfa, 'Beta': index, "Psi": psi}, index=ilist)
-        s2=d['Skewness']**2 #skew²
-        k=d["Kurtosis"]
-        alpha=d["Alpha"]
-        beta=d["Beta"]
-        legend=title
-        cullenfrey(s2,k, legend, title) #Mapa de cullen e frey
-        plt.title("EPSB-K-means, {}".format(title))
         
-        return
+        ilist=namefile
+        d=[]
+        for file in namefile:
+            fileread=open(file)
+            y=[]
+            for line in fileread:
+                y.append(float(line))
+            alfa,xdfa,ydfa, reta = statsfuncs.dfa1d(y,1)
+            freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM = statsfuncs.psd(y)
+            d.append([statsfuncs.variance(y), statsfuncs.skewness(y), statsfuncs.kurtosis(y)+3, alfa, index, 0])
+        QTD=10
+        d2,ilist2,rawdata=makeseries(randomseries, [8192],QTD)
+        for i in d2:
+            d.append(i)
+        for j in ilist2:
+            ilist.append(j)
+        
+        d2,ilist2,rawdata=makeseries(powerlaw_psd_gaussian, range(0,3), QTD//3)
+        for i in d2:
+            d.append(i)
+        for j in ilist2:
+            ilist.append(j)
+        # d2,ilist2,rawdata=makeseries(pmodel, ["Exogenous", "Endogenous"] , QTD//2)
+        # for i in d2:
+        #     d.append(i)
+        # for j in ilist2:
+        #     ilist.append(j)
+        d2,ilist2,rawdata=makeseries(Logistic, ["Logistic"], QTD//2)
+        for i in d2:
+            d.append(i)
+        for j in ilist2:
+            ilist.append(j)
+        d2,ilist2,rawdata=makeseries(HenonMap, ["Henon"], QTD//2)
+        for i in d2:
+            d.append(i)
+        for j in ilist2:
+            ilist.append(j)
+        s2=[]
+        k=[]
+        alpha=[]
+        beta=[]
+        for i in range(len(d)):
+            s2.append(d[i][1]**2)
+            k.append(d[i][2])
+            alpha.append(d[i][3])
+            beta.append(d[i][4])
+        makespaces62(s2,k,alpha,beta,"All signals and Brazil Covid data", "Brazil", ilist)
+        return d
+    
     else:
         return
     #Fazendo o clustering, via kmeans, dos momentos estatísticos obtidos.
