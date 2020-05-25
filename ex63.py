@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import statsfuncs
 import mfdfa
-
+import waipy
 def SOC(data, title, n_bins=50):
     n = len(data)
     mean = np.mean(data)
@@ -52,17 +52,20 @@ def SOC(data, title, n_bins=50):
     plt.grid()
     plt.show() 
 
-namefile="daily-cases-covid-19.csv"
+namefile="daily-cases-covid-19-limpo.csv"
 l=pd.read_csv(namefile)
 codes=list(set(l["Entity"]))
 codes=codes[1:]
 l=l.set_index("Entity")
 values=[]
-
+countries=["Belgium", "Brazil", "France", "Portugal", "Spain" ]
 for i in codes:
     y=list(l.filter(like=i, axis=0)["Daily confirmed cases (cases)"])
+    if i in countries:
+        result=waipy.cwt(y, 1, 1, 0.125, 2, 4/0.125, 0.72, 6, 'DOG', "x")
+        waipy.wavelet_plot(i, range(len(y)), y, 0.03125, result, savefig=True)
     if len(y) > 50:
-        SOC(y, i)
+        # SOC(y, i)
         alfa,xdfa,ydfa, reta = statsfuncs.dfa1d(y,1)
         freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM = statsfuncs.psd(y)
         values.append([statsfuncs.variance(y), statsfuncs.skewness(y), statsfuncs.kurtosis(y), alfa, index, mfdfa.makemfdfa(y), i])
@@ -179,6 +182,3 @@ plt.show()
 kk=pd.DataFrame({'Skew²': skew2,'Psi': psi,'Cluster psi': model3.labels_}, index=index)
 kk=kk.sort_values(by=["Cluster psi"])
 kk.to_csv("sort_by_psi.csv")
-
-
-
