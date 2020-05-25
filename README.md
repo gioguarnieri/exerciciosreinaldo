@@ -46,11 +46,11 @@ Listando as análises feitas pra cada série temporal, na ordem que foram feitas
 - A fazer, o exercício propõe que façamos um clustering via k-means para todos os dados gerados a partir dos sinais anteriores (GRNG, Colored Noise, pmodel e Chaos Noise) e com eles tentar classificar em quais desses tipos de ruídos os sinais vindo de arquivo devem se encaixar melhor, fazendo uma identificação por cores em cada um deles.
 # ex63.py
 
-Resolução dos exercícios 6.3 e 10.2 da lista, utiliza os módulos statsfuncs.py, mfdfa.py e waipy.py, e como input um arquivo completo do https://ourworldindata.org/coronavirus de "Daily confirmed cases", executa uma análise de SOC e de K-Means, tem um arquivo de exemplo no repositório de "daily-cases-covid-19.csv", obtido no dia 18/05/2020.
+Resolução dos exercícios 6.3 e 10.2 da lista, utiliza os módulos statsfuncs.py, mfdfa.py e waipy.py, e como input um arquivo completo do https://ourworldindata.org/coronavirus de "Daily confirmed cases", executa uma análise de SOC, de K-Means e Wavelets, tem um arquivo de exemplo no repositório de "daily-cases-covid-19.csv", obtido no dia 21/05/2020.
 
 # ex9.py
 
-Resolução do exercício 9 da lista, utiliza o arquivo waipy.py.
+Resolução do exercício 9 da lista, utiliza o arquivo waipy.py. Faz uma análise do pmodel de SOC e de Wavelets, faz o SOC para 50 séries exógenas e endógenas diferentes, totalizando 100 séries. Depois disso faz uma análise de wavelets pra última série gerada.
 
 # mfdfa.py, statsfuncs.py e waipy.py
 
@@ -63,4 +63,4 @@ Arquivos de dados utilizados no exercício 6.2.
 
 # daily-cases-covid-19.csv
 
-Arquivo de dados obtido em https://ourworldindata.org/coronavirus no dia 18/05/2020, utilizado para o exercício 6.3.
+Arquivo de dados obtido em https://ourworldindata.org/coronavirus no dia 21/05/2020, utilizado para o exercício 6.3.
