@@ -52,7 +52,7 @@ def SOC(data, title, n_bins=50):
     plt.grid()
     plt.show() 
 
-namefile="daily-cases-covid-19-limpo.csv"
+namefile="daily-cases-covid-19.csv"
 l=pd.read_csv(namefile)
 codes=list(set(l["Entity"]))
 codes=codes[1:]
