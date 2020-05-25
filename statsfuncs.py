@@ -21,6 +21,22 @@ from scipy import optimize
 import matplotlib.mlab as mlab
 import numpy as np
 
+
+
+'''
+Função que serviu para teste do mapa de cullen frey, gera números aleatórios
+numa certa distribuição e o mapa posiciona naquela distribuição de acordo
+com os momentos estatísticos de Kurtosis e Skewness²
+
+'''
+
+def teste(N):
+    x=range(N)
+    y=[]
+    for i in x:
+        y.append(rnd.normal())
+    return x,y
+
 def momentum(data,r):
     media=sum(data)/len(data)
     soma=0
@@ -140,3 +156,36 @@ def dfa1d(timeSeries, grau):
 	return slope, x, y, predict_y
 
 
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import numpy.random as rnd
+    x,y=teste(8192)
+    plt.figure(figsize=(20, 12))
+    #Plot da série temporal
+    ax1 = plt.subplot(211)
+    ax1.set_title("Gaussian RNG", fontsize=18)
+    (mu,sigma)=norm.fit(y)
+    n, bins, patches = ax1.hist(y, 60, density=1, facecolor='powderblue', alpha=0.75)
+    ax1.plot(bins,norm.pdf(bins,mu,sigma), c="black", linestyle='--')
+    #Plot e cálculo do DFA
+    ax2 = plt.subplot(223)
+    slope,xdfa,ydfa,predict_y=dfa1d(y, 1)
+    ax2.set_title(r"Detrended Fluctuation Analysis $\alpha$={0:.3}".format(slope, fontsize=15))
+    ax2.plot(xdfa,ydfa, marker='o', linestyle='', color="#12355B")
+    ax2.plot(xdfa, predict_y, color="#9DACB2")
+    #Plot e cálculo do PSD
+    freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM = psd(y)
+    ax3 = plt.subplot(224)
+    ax3.set_title(r"Power Spectrum Density $\beta$={0:.3}".format(index, fontsize=15))
+    ax3.set_yscale('log')
+    ax3.set_xscale('log')
+    ax3.plot(freqs, power, '-', color = 'deepskyblue', alpha = 0.7)
+    ax3.plot(xdata, ydata, color = "darkblue", alpha = 0.8)
+    ax3.axvline(freqs[INICIO], color = "darkblue", linestyle = '--')
+    ax3.axvline(freqs[FIM], color = "darkblue", linestyle = '--')    
+    ax3.plot(xdata, powerlaw(xdata, amp, index),color="#D65108", linestyle='-', linewidth = 3, label = '$%.4f$' %(index))
+    ax2.set_xlabel("log(s)")
+    ax2.set_ylabel("log F(s)")
+    ax3.set_xlabel("Frequência (Hz)")
+    ax3.set_ylabel("Potência")
+    plt.show()
