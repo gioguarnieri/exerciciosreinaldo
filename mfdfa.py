@@ -312,3 +312,21 @@ def makemfdfa(dx, makegraphs=False):
     psi= (stats['LH_max']-stats['LH_min'])/stats['LH_max']
     # return stats['LH_min'], stats['LH_max'], stats['LH_max']-stats['LH_min'], psi
     return psi
+
+if __name__ == "__main__":
+    from scipy.stats import norm
+    import numpy.random as rnd
+    def teste(N):
+        x=range(N)
+        y=[]
+        for i in x:
+            y.append(rnd.normal())
+        return x,y
+    x,y=teste(8192)
+    plt.figure(figsize=(20, 12))
+    #Plot da série temporal
+    plt.title("Gaussian RNG", fontsize=18)
+    (mu,sigma)=norm.fit(y)
+    n, bins, patches = plt.hist(y, 60, density=1, facecolor='powderblue', alpha=0.75)
+    plt.plot(bins,norm.pdf(bins,mu,sigma), c="black", linestyle='--')
+    makemfdfa(y, True)
