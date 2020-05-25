@@ -8,6 +8,7 @@ Created on Tue May 19 08:16:56 2020
 import numpy as np
 import numpy.random as rnd
 import matplotlib.pyplot as plt
+import waipy
 
 def pmodel(seriestype):
     if(seriestype=="Endogenous"):
@@ -106,6 +107,14 @@ def SOC(data, n_bins=50):
     plt.show() 
 
 for i in range(50):
-    SOC(pmodel("Endogenous"))
-    SOC(pmodel("Exogenous"))
-    
+    x,p=pmodel("Endogenous")
+    SOC(p)
+
+result=waipy.cwt(p, 1, 1, 0.125, 2, 4/0.125, 0.72, 6, 'DOG', "x")
+waipy.wavelet_plot("Endogenous series", x, p, 0.03125, result, True)
+
+for i in range(50):
+    x,p=pmodel("Exogenous")
+    SOC(p)
+result=waipy.cwt(p, 1, 1, 0.125, 2, 4/0.125, 0.72, 6, 'DOG', "x")
+waipy.wavelet_plot("Exogenous series", x, p, 0.03125, result, True)
