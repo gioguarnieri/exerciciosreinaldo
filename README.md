@@ -5,6 +5,8 @@ Exercicios da lista da matéria de Matemática Computacional do professor Reinal
 
 Arquivo com a maioria das resoluções de exercícios da lista, ele pede um input do usuário e então faz tudo que é pedido pra aquele tipo de distribuição de uma vez, gerando gráficos que servem como resposta.
 
+A ideia desse código é fazer em um código só todas as análises passadas em aula para as séries canônicas, deixar tudo concentrado em um click.
+
 Utiliza o mfdfa.py e o statsfuncs.py como módulos e utiliza os arquivos de dados covidbrasil.dat, sol3ghz.dat e surftemp504.txt como input para resolução de exercícios.
 
 # Análises feitas pra os tipos de distribuição:
