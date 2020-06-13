@@ -16,7 +16,6 @@ def SOC(data, title, n_bins=50):
     n = len(data)
     mean = np.mean(data)
     var = np.var(data)
-    std = np.std(data)
     #print("mean: ", mean, " var: ", var)
     """ Computa a Taxa Local de Flutuação para cada valor da ST """ 
     Gamma = []
@@ -50,7 +49,7 @@ def SOC(data, title, n_bins=50):
     plt.xlabel('log(ni)')
     plt.ylabel('log(Yi)') 
     plt.grid()
-    plt.show() 
+    # plt.show() 
 
 namefile="daily-cases-covid-19.csv"
 l=pd.read_csv(namefile)
@@ -65,11 +64,12 @@ for i in codes:
         result=waipy.cwt(y, 1, 1, 0.125, 2, 4/0.125, 0.72, 6, 'DOG', "x")
         waipy.wavelet_plot(i, range(len(y)), y, 0.03125, result, savefig=True)
     if len(y) > 50:
-        # SOC(y, i)
+        SOC(y, i)
         alfa,xdfa,ydfa, reta = statsfuncs.dfa1d(y,1)
         freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM = statsfuncs.psd(y)
-        values.append([statsfuncs.variance(y), statsfuncs.skewness(y), statsfuncs.kurtosis(y), alfa, index, mfdfa.makemfdfa(y), i])
-
+        a,b,c=mfdfa.makemfdfa(y)
+        values.append([statsfuncs.variance(y), statsfuncs.skewness(y), statsfuncs.kurtosis(y), alfa, index, a, i])
+plt.show()
 skew2=[]
 alfa=[]
 kurt=[]
@@ -104,8 +104,9 @@ for i in range(0,kIdx):
 
 plt.xlabel("Skew²")
 plt.ylabel("Alfa")
-plt.title('KMeans clustering with K=%d' % kIdx)
+plt.title('KMeans clustering with K=%d\n All countries with >50 days' % kIdx)
 plt.legend()
+plt.savefig("covids2xalfaclusters.png")
 plt.show()
 
 kk=pd.DataFrame({'Skew²': skew2,'Alpha': alfa,'Cluster skew²': model1.labels_}, index=index)
@@ -130,7 +131,8 @@ for i in range(0,kIdx):
 
 plt.xlabel("Kurtosis")
 plt.ylabel("Alfa")
-plt.title('KMeans clustering with K=%d' % kIdx)
+plt.title('KMeans clustering with K=%d\n All countries with >50 days' % kIdx)
+plt.savefig("covidkxalfaclusters.png")
 plt.legend()
 plt.show()
 
@@ -173,8 +175,9 @@ for i in range(0,kIdx):
 
 plt.xlabel("Skew²")
 plt.ylabel("Psi")
-plt.title('KMeans clustering with K=%d' % kIdx)
+plt.title('KMeans clustering with K=%d\n With some excluded countries' % kIdx)
 plt.legend()
+plt.savefig("covids2xpsiclusters.png")
 plt.show()
 
 
