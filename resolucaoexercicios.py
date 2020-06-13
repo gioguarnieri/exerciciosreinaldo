@@ -12,7 +12,7 @@ IMPORTAÇÃO DE MÓDULOS
 
 
 # import matplotlib.mlab as mlab
-from scipy.stats import norm
+from scipy.stats import norm, genextreme
 # from scipy import optimize
 import numpy.random as rnd
 from numpy.fft import rfftfreq, irfft
@@ -41,10 +41,12 @@ em um código que faça tudo de uma vez
 def pmodel(seriestype):
     if(seriestype=="Endogenous"):
         p=0.32 + 0.1*rnd.uniform()
+        slope= 0.4
     else:
         p=0.18 + 0.1*rnd.uniform()
+        slope=0.7
     noValues=8192
-    slope=0.4
+
     noOrders = int(np.ceil(np.log2(noValues)))
     
     y = np.array([1])
@@ -234,7 +236,7 @@ geralmente retornam os dados que elas geram.
 ###############################################################################
 '''
 
-def makeseries(func, iterationlist, amount):
+def makeseries(func, iterationlist, amount, title="Nada", graphs=False):
     values=[]
     ilist=[]
     rawdata=[]
@@ -243,13 +245,23 @@ def makeseries(func, iterationlist, amount):
             x,y=func(i)
             alfa,xdfa,ydfa, reta = statsfuncs.dfa1d(y,1)
             freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM = statsfuncs.psd(y)
-            psi=mfdfa.makemfdfa(y)
+            psi,alphal,falpha=mfdfa.makemfdfa(y)
             values.append([statsfuncs.variance(y), statsfuncs.skewness(y), statsfuncs.kurtosis(y)+3, alfa, index,psi])
             ilist.append(i)
+            if graphs==True:
+                plt.plot(alphal, falpha, 'ko-', label=str(j))
+        if graphs==True:
+            plt.title("Espectro de Singularidade, para: {} {}".format(title,i))
+            plt.xlabel(r'$\alpha$')
+            plt.ylabel(r'$f(\alpha)$')
+            plt.grid('on', which = 'major')
+            plt.savefig("{}singularityspectrum{}".format(title,i))
+            plt.show()
         rawdata.append([i,x,y, alfa, xdfa, ydfa, reta, freqs, power, xdata, ydata, amp, index, powerlaw, INICIO, FIM])
     return values, ilist, rawdata
 
 def makeK(d,ilist, title):
+    print(ilist)
     d=np.array(d)
     kk=pd.DataFrame({'Variance': d[:,0], 'Skewness': d[:,1], 'Kurtosis': d[:,2]})
     K=20
@@ -267,13 +279,12 @@ def makeK(d,ilist, title):
     for i in range(0,kIdx):
         ind = (model.labels_==i)
         ax.scatter(d[ind,2],d[ind,1], d[ind,0], s=30, c=clr[i], label='Cluster %d'%i)
-    
     ax.set_xlabel("Kurtosis")
     ax.set_ylabel("Skew")
     ax.set_zlabel("Variance")
     plt.title(title+': KMeans clustering with K=%d' % kIdx)
     plt.legend()
-    plt.savefig(title+"clustersnoises.png")
+    plt.savefig(title+"clusters.png")
     plt.show()
     d=pd.DataFrame({'Variance': d[:,0], 'Skewness': d[:,1], 'Kurtosis': d[:,2], 'Alpha': d[:,3], 'Beta': d[:,4], "Psi": d[:,5], "Cluster": model.labels_}, index=ilist)
     return d
@@ -342,6 +353,7 @@ def makespaces(s2, k, alpha, beta, legend, title):
     ax.set_zlabel(r"$\alpha$")
     ax.legend()
     plt.title(title+": EDF-K-means")
+    plt.savefig(title+"EDF.png")
     plt.show()
     model=KMeans()
     visualizer = KElbowVisualizer(model, k=(1,K))
@@ -361,9 +373,21 @@ def makespaces(s2, k, alpha, beta, legend, title):
     ax.set_zlabel(r"$\beta$")
     ax.legend()
     plt.title(title+": EPSB-K-means")
+    plt.savefig(title+"EPSB.png")
     plt.show()
 
 def makespaces62(s2, k, alpha, beta, legend, title, ilist):
+    SMALL_SIZE = 10
+    MEDIUM_SIZE = 15
+    BIGGER_SIZE = 20
+    
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=MEDIUM_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
     kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta, "Entity": ilist})
     K=8
     model=KMeans()
@@ -380,13 +404,13 @@ def makespaces62(s2, k, alpha, beta, legend, title, ilist):
     clr = [cmap(i) for i in np.linspace(0, 1, len(ilist2))]
     for i in range(0,len(ilist2)):
         ind = (kk["Entity"]==ilist2[i])
-        ax.scatter(kk["Skew²"][ind],kk["Kurtosis"][ind], kk["Alpha"][ind], s=30, c=clr[i], label=ilist2[i])
+        ax.scatter(kk["Skew²"][ind],kk["Kurtosis"][ind], kk["Alpha"][ind], s=120, c=clr[i], label=ilist2[i])
     ax.set_xlabel("Skew²")
     ax.set_ylabel("Kurtosis")
     ax.set_zlabel(r"$\alpha$")
     ax.legend()
     plt.title(title+": EDF-K-means")
-    plt.savefig("masoq.png")
+    plt.savefig("datasetandcovidEDF.png")
     plt.show()
     kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta, "Entity": ilist}, index=model.labels_)
     kk.sort_index(inplace=True)
@@ -403,18 +427,74 @@ def makespaces62(s2, k, alpha, beta, legend, title, ilist):
     clr = [cmap(i) for i in np.linspace(0, 1, len(ilist2))]
     for i in range(0,len(ilist2)):
         ind = (kk["Entity"]==ilist2[i])
-        ax.scatter(kk["Skew²"][ind],kk["Kurtosis"][ind], kk["Beta"][ind], s=30, c=clr[i], label=ilist[i])
+        ax.scatter(kk["Skew²"][ind],kk["Kurtosis"][ind], kk["Beta"][ind], s=120, c=clr[i], label=ilist2[i])
     ax.set_xlabel("Skew²")
     ax.set_ylabel("Kurtosis")
     ax.set_zlabel(r"$\beta$")
     ax.legend()
     plt.title(title+": EPSB-K-means")
-    plt.savefig("masoq2.png")
+    plt.savefig("datasetandcovidEPSB.png")
     plt.show()
     kk=pd.DataFrame({'Skew²': s2, 'Kurtosis': k, 'Alpha': alpha, 'Beta': beta, "Entity": ilist}, index=model.labels_)
     kk.sort_index(inplace=True)
     kk.to_csv("clusteringbeta.csv")
 
+def makeGraphs(rawdata,title, filename, pmodel=False, chaosnoise=False):
+    for i in range(len(rawdata)):
+        #Plot e ajuste do histograma da série temporal
+        (mu, sigma) = norm.fit(rawdata[0][2])
+        # rv_nrm = norm(loc=mu, scale=sigma)
+        # Estimate GEV:
+        n=8192
+        ypoints=[min(rawdata[0][2]) + (i/n) * (max(rawdata[0][2])-min(rawdata[0][2])) for i in range(0, n+1)]
+        gev_fit = genextreme.fit(rawdata[0][2])
+        # GEV parameters from fit:
+        c, loc, scale = gev_fit
+        mean, var, skew, kurt = genextreme.stats(c, moments='mvsk')
+        rv_gev = genextreme(c, loc=loc, scale=scale)
+        # Create data from estimated GEV to plot:
+        gev_pdf = rv_gev.pdf(ypoints)
+        plt.title((title+"\nMu= {1:.3}, Sigma={2:.3}.").format(rawdata[i][0], mu, sigma))
+        n, bins, patches = plt.hist(rawdata[0][2], 60, density=1, facecolor='powderblue', alpha=0.75, label="Normalized data")
+        plt.plot(np.arange(min(bins), max(bins), (max(bins) - min(bins))/len(rawdata[0][2])), gev_pdf[:len(rawdata[0][2])],'r-', lw=5, alpha=0.6, label='genextreme pdf')
+        plt.ylabel("Probability Density")
+        plt.xlabel("Value")
+        plt.legend()
+        plt.savefig("PDF"+filename.format(i))
+        plt.show()
+        
+        plt.figure(figsize=(20, 12))
+        #Plot da série temporal
+        ax1 = plt.subplot(211)
+        ax1.set_title(title.format(rawdata[i][0]), fontsize=18)
+        if pmodel==True:
+            ax1.plot(rawdata[i][2], color="firebrick", linestyle='-', label="Data")
+        elif chaosnoise==True:
+            ax1.plot(rawdata[i][1],rawdata[i][2], color="firebrick", marker= 'o', linestyle='', label="Data")
+        else:
+            ax1.plot(rawdata[i][1],rawdata[i][2], color="firebrick", linestyle='-', label="Data")
+        #Plot e cálculo do DFA
+        ax2 = plt.subplot(223)
+        ax2.set_title(r"Detrended Fluctuation Analysis $\alpha$={0:.3}".format(rawdata[i][3]), fontsize=15)
+        ax2.plot(rawdata[i][4],rawdata[i][5], marker='o', linestyle='', color="#12355B", label="{0:.3}".format(rawdata[i][3]))
+        ax2.plot(rawdata[i][4], rawdata[i][6], color="#9DACB2")
+        #Plot e cáculo do PSD
+        ax3 = plt.subplot(224)
+        ax3.set_title(r"Power Spectrum Density $\beta$={0:.3}".format(rawdata[i][12]), fontsize=15)
+        ax3.set_yscale('log')
+        ax3.set_xscale('log')
+        ax3.plot(rawdata[i][7], rawdata[i][8], '-', color = 'deepskyblue', alpha = 0.7)
+        ax3.plot(rawdata[i][9], rawdata[i][10], color = "darkblue", alpha = 0.8)
+        ax3.axvline(rawdata[i][7][rawdata[i][14]], color = "darkblue", linestyle = '--')
+        ax3.axvline(rawdata[i][7][rawdata[i][15]], color = "darkblue", linestyle = '--')    
+        ax3.plot(rawdata[i][9], rawdata[i][13](rawdata[i][9], rawdata[i][11], rawdata[i][12]),color="#D65108", linestyle='-', linewidth = 3, label = '{0:.3}$'.format(rawdata[i][12])) 
+        ax2.set_xlabel("log(s)")
+        ax2.set_ylabel("log F(s)")
+        ax3.set_xlabel("Frequência (Hz)")
+        ax3.set_ylabel("Potência")
+        ax3.legend()
+        plt.savefig(filename.format(i))
+        plt.show()
 '''
 ###############################################################################
 
@@ -448,35 +528,9 @@ def main():
         '''
         title="Série: GRNG. Quantidade de Dados N={0}"
         i=[2**i for i in range(6,14)]
-        d,ilist,rawdata=makeseries(randomseries, i,10)
-        for i in range(len(rawdata)):
-            plt.figure(figsize=(20, 12))
-            #Plot da série temporal
-            ax1 = plt.subplot(211)
-            ax1.set_title(title.format(rawdata[i][0]), fontsize=18)
-            ax1.plot(rawdata[i][1],rawdata[i][2], color="firebrick", linestyle='-', label="Data")
-            #Plot e cálculo do DFA
-            ax2 = plt.subplot(223)
-            ax2.set_title(r"Detrended Fluctuation Analysis $\alpha$={0:.3}".format(rawdata[i][3]), fontsize=15)
-            ax2.plot(rawdata[i][4],rawdata[i][5], marker='o', linestyle='', color="#12355B", label="{0:.3}".format(rawdata[i][3]))
-            ax2.plot(rawdata[i][4], rawdata[i][6], color="#9DACB2")
-            #Plot e cáculo do PSD
-            ax3 = plt.subplot(224)
-            ax3.set_title(r"Power Spectrum Density $\beta$={0:.3}".format(rawdata[i][12]), fontsize=15)
-            ax3.set_yscale('log')
-            ax3.set_xscale('log')
-            ax3.plot(rawdata[i][7], rawdata[i][8], '-', color = 'deepskyblue', alpha = 0.7)
-            ax3.plot(rawdata[i][9], rawdata[i][10], color = "darkblue", alpha = 0.8)
-            ax3.axvline(rawdata[i][7][rawdata[i][14]], color = "darkblue", linestyle = '--')
-            ax3.axvline(rawdata[i][7][rawdata[i][15]], color = "darkblue", linestyle = '--')    
-            ax3.plot(rawdata[i][9], rawdata[i][13](rawdata[i][9], rawdata[i][11], rawdata[i][12]),color="#D65108", linestyle='-', linewidth = 3, label = '{0:.3}$'.format(rawdata[i][12])) 
-            ax2.set_xlabel("log(s)")
-            ax2.set_ylabel("log F(s)")
-            ax3.set_xlabel("Frequência (Hz)")
-            ax3.set_ylabel("Potência")
-            ax3.legend()
-            plt.savefig("GRNGserietemporalpsddfa{}.png".format(i))
-            plt.show()
+        d,ilist,rawdata=makeseries(randomseries, i,10, "GRNG", True)
+        filename="GRNGserietemporalpsddfa{}.png"
+        makeGraphs(rawdata,title,filename)
         title="GRNG"
         d=makeK(d,ilist, title)
 
@@ -490,49 +544,13 @@ def main():
     parâmetros mu e sigma.
         '''
         title="Série: Colored Noise. Expoente = {0}"
-        d,ilist,rawdata=makeseries(powerlaw_psd_gaussian, range(0,3), 20)
+        d,ilist,rawdata=makeseries(powerlaw_psd_gaussian, range(0,3), 20, "colorednoise", True)
         while(0 in ilist or 1 in ilist or 2 in ilist):
             ilist[ilist.index(0)] = 'white noise'
             ilist[ilist.index(1)] = 'pink noise'
             ilist[ilist.index(2)] = 'red noise'
-        for i in range(len(rawdata)):
-            #Plot e ajuste do histograma da série temporal
-            (mu,sigma)=norm.fit(rawdata[i][2])
-            plt.title((title+"\nMu= {1:.3}, Sigma={2:.3}.").format(rawdata[i][0], mu, sigma))
-            n, bins, patches = plt.hist(rawdata[i][2], 60, density=1, facecolor='powderblue', alpha=0.75)
-            plt.plot(bins,norm.pdf(bins,mu,sigma), c="black", linestyle='--')
-            plt.savefig("colorednoise{}PDF.png".format(i))
-            plt.show()
-            plt.figure(figsize=(20, 12))
-            #Plot da série temporal
-            ax1 = plt.subplot(211)
-            ax1.set_title(title.format(rawdata[i][0]), fontsize=18)
-            ax1.plot(rawdata[i][1],rawdata[i][2],color="firebrick", linestyle='-')
-            #Plot e cálculo do DFA
-            ax2 = plt.subplot(223)
-            ax2.set_title(r"Detrended Fluctuation Analysis $\alpha$={0:.3}".format(rawdata[i][3]), fontsize=15)
-            ax2.plot(rawdata[i][4],rawdata[i][5], marker='o', linestyle='', color="#12355B")
-            ax2.plot(rawdata[i][4], rawdata[i][6], color="#9DACB2")
-            #Plot e cálculo do PSD
-            ax3 = plt.subplot(224)
-            ax3.set_title(r"Power Spectrum Density $\beta$={0:.3}".format(rawdata[i][12]), fontsize=15)
-            ax3.set_yscale('log')
-            ax3.set_xscale('log')
-            ax3.plot(rawdata[i][7], rawdata[i][8], '-', color = 'deepskyblue', alpha = 0.7)
-            ax3.plot(rawdata[i][9], rawdata[i][10], color = "darkblue", alpha = 0.8)
-            ax3.axvline(rawdata[i][7][rawdata[i][14]], color = "darkblue", linestyle = '--')
-            ax3.axvline(rawdata[i][7][rawdata[i][15]], color = "darkblue", linestyle = '--')    
-            ax3.plot(rawdata[i][9], rawdata[i][13](rawdata[i][9], rawdata[i][11], rawdata[i][12]),color="#D65108", linestyle='-', linewidth = 3, label = '$%.4f$' %(rawdata[i][12]))
-            ax2.set_xlabel("log(s)")
-            ax2.set_ylabel("log F(s)")
-            ax3.set_xlabel("Frequência (Hz)")
-            ax3.set_ylabel("Potência")
-            ax2.set_xlabel("log(s)")
-            ax2.set_ylabel("log F(s)")
-            ax3.set_xlabel("Frequência (Hz)")
-            ax3.set_ylabel("Potência")
-            plt.savefig("CNserietemporalpsddfa{}.png".format(i))
-            plt.show()
+        filename="CNserietemporalpsddfa{}.png"
+        makeGraphs(rawdata, title, filename)
         title="colorednoise"
         d=makeK(d,ilist, title)
         
@@ -550,34 +568,9 @@ def main():
         for i in range(qtd):
             p.append("Exogenous")
         title="Série: pmodel. {0}"
-        d,ilist,rawdata=makeseries(pmodel, p,30)
-        for i in range(len(rawdata)):
-            plt.figure(figsize=(20, 12))
-            #Plot da série temporal
-            ax1 = plt.subplot(211)
-            ax1.set_title(title.format(rawdata[i][0]), fontsize=18)
-            ax1.plot(rawdata[i][2],color="firebrick", linestyle='-')
-            #Plot e cálculo do DFA
-            ax2 = plt.subplot(223)
-            ax2.set_title(r"Detrended Fluctuation Analysis $\alpha$={0:.3}".format(rawdata[i][3]), fontsize=15)
-            plt.plot(rawdata[i][4],rawdata[i][5], marker='o', linestyle='', color="#12355B")
-            plt.plot(rawdata[i][4], rawdata[i][6], color="#9DACB2")
-            #Plot e cálculo do PSD
-            ax3 = plt.subplot(224)
-            ax3.set_title(r"Power Spectrum Density $\beta=${0:.3}".format(rawdata[i][12]), fontsize=15)
-            ax3.set_yscale('log')
-            ax3.set_xscale('log')
-            ax3.plot(rawdata[i][7], rawdata[i][8], '-', color = 'deepskyblue', alpha = 0.7)
-            ax3.plot(rawdata[i][9], rawdata[i][10], color = "darkblue", alpha = 0.8)
-            ax3.axvline(rawdata[i][7][rawdata[i][14]], color = "darkblue", linestyle = '--')
-            ax3.axvline(rawdata[i][7][rawdata[i][15]], color = "darkblue", linestyle = '--')    
-            ax3.plot(rawdata[i][9], rawdata[i][13](rawdata[i][9], rawdata[i][11], rawdata[i][12]), color="#D65108", linestyle='-', linewidth = 3, label = '$%.4f$' %(rawdata[i][12]))
-            ax2.set_xlabel("log(s)")
-            ax2.set_ylabel("log F(s)")
-            ax3.set_xlabel("Frequência (Hz)")
-            ax3.set_ylabel("Potência")
-            plt.savefig("Pmodelserietemporalpsddfa{}.png".format(i))
-            plt.show()
+        d,ilist,rawdata=makeseries(pmodel, p,30, "pmodel", True)
+        filename="Pmodelserietemporalpsddfa{}.png"
+        makeGraphs(rawdata, title, filename, pmodel=True)
         title="pmodel"
         d=makeK(d,ilist, title)
         
@@ -590,38 +583,13 @@ def main():
     Totalizando em 60 sinais no total.
         '''
         title="Série: Chaos Noise. {0}"
-        d,ilist,rawdata=makeseries(Logistic, ["Logistic"], 30)
-        aux1,aux2,aux3=makeseries(HenonMap, ["Henon"], 30)
+        d,ilist,rawdata=makeseries(Logistic, ["Logistic"], 30, "Chaos Noise", True)
+        aux1,aux2,aux3=makeseries(HenonMap, ["Henon"], 30, "Chaos Noise", True)
         rawdata+=aux3
         d+=aux1
         ilist+=aux2
-        for i in range(len(rawdata)):
-            plt.figure(figsize=(20, 12))
-            #Plot da série temporal
-            ax1 = plt.subplot(211)
-            ax1.set_title(title.format(rawdata[i][0]), fontsize=18)
-            ax1.plot(rawdata[i][1],rawdata[i][2],color="firebrick", marker='o', linestyle='')
-            #Plot e cálculo do DFA
-            ax2 = plt.subplot(223)
-            ax2.set_title(r"Detrended Fluctuation Analysis $\alpha$={0:.3}".format(rawdata[i][3], fontsize=15))
-            ax2.plot(rawdata[i][4],rawdata[i][5], marker='o', linestyle='', color="#12355B")
-            ax2.plot(rawdata[i][4], rawdata[i][6], color="#9DACB2")
-            #Plot e cálculo do PSD
-            ax3 = plt.subplot(224)
-            ax3.set_title(r"Power Spectrum Density $\beta$={0:.3}".format(rawdata[i][12]), fontsize=15)
-            ax3.set_yscale('log')
-            ax3.set_xscale('log')
-            ax3.plot(rawdata[i][7], rawdata[i][8], '-', color = 'deepskyblue', alpha = 0.7)
-            ax3.plot(rawdata[i][9], rawdata[i][10], color = "darkblue", alpha = 0.8)
-            ax3.axvline(rawdata[i][7][rawdata[i][14]], color = "darkblue", linestyle = '--')
-            ax3.axvline(rawdata[i][7][rawdata[i][15]], color = "darkblue", linestyle = '--')    
-            ax3.plot(rawdata[i][9], rawdata[i][13](rawdata[i][9], rawdata[i][11], rawdata[i][12]),color="#D65108", linestyle='-', linewidth = 3, label = '$%.4f$' %(rawdata[i][12]))
-            ax2.set_xlabel("log(s)")
-            ax2.set_ylabel("log F(s)")
-            ax3.set_xlabel("Frequência (Hz)")
-            ax3.set_ylabel("Potência")
-            plt.savefig("Chaosserietemporalpsddfa{}.png".format(i))
-            plt.show()
+        filename="Chaosserietemporalpsddfa{}.png"
+        makeGraphs(rawdata, title, filename, chaosnoise=True)
         title="chaosnoise"
         d=makeK(d,ilist, title)
     elif(choice=="5"):
@@ -649,11 +617,11 @@ def main():
             d.append(i)
         for j in ilist2:
             ilist.append(j)
-        # d2,ilist2,rawdata=makeseries(pmodel, ["Exogenous", "Endogenous"] , QTD//2)
-        # for i in d2:
-        #     d.append(i)
-        # for j in ilist2:
-        #     ilist.append(j)
+        d2,ilist2,rawdata=makeseries(pmodel, ["Exogenous", "Endogenous"] , QTD//2)
+        for i in d2:
+            d.append(i)
+        for j in ilist2:
+            ilist.append(j)
         d2,ilist2,rawdata=makeseries(Logistic, ["Logistic"], QTD//2)
         for i in d2:
             d.append(i)
