@@ -13,10 +13,12 @@ import waipy
 def pmodel(seriestype):
     if(seriestype=="Endogenous"):
         p=0.32 + 0.1*rnd.uniform()
+        slope=0.4
     else:
         p=0.18 + 0.1*rnd.uniform()
+        slope=0.7
     noValues=8192
-    slope=0.4
+
     noOrders = int(np.ceil(np.log2(noValues)))
     
     y = np.array([1])
@@ -106,14 +108,14 @@ def SOC(data, n_bins=50):
     plt.grid()
     plt.show() 
 
-for i in range(50):
+for i in range(1):
     x,p=pmodel("Endogenous")
     SOC(p)
 
 result=waipy.cwt(p, 1, 1, 0.125, 2, 4/0.125, 0.72, 6, 'DOG', "x")
 waipy.wavelet_plot("Endogenous series", x, p, 0.03125, result, True)
 
-for i in range(50):
+for i in range(1):
     x,p=pmodel("Exogenous")
     SOC(p)
 result=waipy.cwt(p, 1, 1, 0.125, 2, 4/0.125, 0.72, 6, 'DOG', "x")
